@@ -11,7 +11,7 @@ class MarcaStoreRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,9 @@ class MarcaStoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'nome' => 'required|string|max:255|unique:marcas',
+            'imagem' => 'required|string'
+//            'imagem' => 'required|file|image|mimes:jpeg,png,jpg,gif,svg|max:2048'
         ];
     }
 }
