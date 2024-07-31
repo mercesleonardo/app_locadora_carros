@@ -27,7 +27,6 @@ class MarcaController extends Controller
      */
     public function store(MarcaStoreRequest $request)
     {
-//        dd($request->all());
         $marca = $this->marcaServices->store($request);
 
         return response()->json($marca);
@@ -46,7 +45,9 @@ class MarcaController extends Controller
      */
     public function update(MarcaUpdateRequest $request, Marca $marca)
     {
+
         $marca = $this->marcaServices->update($request, $marca);
+
         return response()->json($marca);
     }
 
