@@ -23,8 +23,8 @@ class MarcaUpdateRequest extends FormRequest
     {
         return [
             'nome' => 'required|string|max:255|unique:marcas,nome,' . $this->route('marca')->id,
-            'imagem' => 'required|string'
-//            'imagem' => 'required|file|image|mimes:jpeg,png,jpg,gif,svg|max:2048'
+//            'imagem' => 'required|string'
+            'imagem' => 'required|file|image|mimes:jpeg,png,jpg,gif,svg|max:2048'
         ];
     }
 
