@@ -37,6 +37,7 @@ class MarcaController extends Controller
      */
     public function show(Marca $marca)
     {
+        $marca->load('modelos');
         return response()->json($marca);
     }
 

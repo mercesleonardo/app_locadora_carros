@@ -12,7 +12,7 @@ class MarcaServices
 {
     public function lista()
     {
-        return Marca::paginate(10);
+        return Marca::with('modelos')->paginate(10);
     }
 
     public function store(MarcaStoreRequest $request)
@@ -33,8 +33,8 @@ class MarcaServices
 
         $data['slug'] = Str::slug($data['nome']);
 
-        // Remove o arquivo antigo caso exista.
         if ($request->hasFile('imagem')) {
+
             if ($marca->imagem) {
                 Storage::disk('public')->delete($marca->imagem);
             }

@@ -2,33 +2,40 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\MarcaStoreRequest;
+use App\Http\Requests\ModeloStoreRequest;
+use App\Http\Requests\ModeloUpdateRequest;
 use App\Models\Modelo;
+use App\Services\ModeloServices;
+use Exception;
 use Illuminate\Http\Request;
 
 class ModeloController extends Controller
 {
+    public function __construct(protected ModeloServices $modeloServices)
+    {}
+
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
+        try {
+            $modelos = $this->modeloServices->lista($request);
+            return response()->json($modelos);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(ModeloStoreRequest $request)
     {
-        //
+           $modelo = $this->modeloServices->store($request);
+
+           return response()->json($modelo);
     }
 
     /**
@@ -36,23 +43,19 @@ class ModeloController extends Controller
      */
     public function show(Modelo $modelo)
     {
-        //
+        $modelo->load('marca');
+        return response()->json($modelo);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Modelo $modelo)
-    {
-        //
-    }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Modelo $modelo)
+    public function update(ModeloUpdateRequest $request, Modelo $modelo)
     {
-        //
+        $modelo = $this->modeloServices->update($request, $modelo);
+
+        return response()->json($modelo);
     }
 
     /**
@@ -60,6 +63,8 @@ class ModeloController extends Controller
      */
     public function destroy(Modelo $modelo)
     {
-        //
+        $this->modeloServices->destroy($modelo);
+
+        return response()->json(["message" => "Modelo deletado com sucesso"]);
     }
 }

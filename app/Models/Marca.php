@@ -10,4 +10,9 @@ class Marca extends Model
     use HasFactory;
 
     protected $fillable = ['nome', 'slug', 'imagem'];
+
+    public function modelos()
+    {
+        return $this->hasMany(Modelo::class);
+    }
 }
