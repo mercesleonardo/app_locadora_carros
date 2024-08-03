@@ -5,96 +5,96 @@ namespace App\Services;
 use App\Http\Requests\ModeloStoreRequest;
 use App\Http\Requests\ModeloUpdateRequest;
 use App\Models\Modelo;
+use App\Repositories\ModeloRepository;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 
 class ModeloServices
 {
-    // Define os atributos permitidos para o modelo e para a relação
-    protected array $allowedAttributes = ['id', 'nome', 'imagem', 'marca_id'];
-    protected array $allowedMarcaAttributes = ['id', 'nome'];
+    public function __construct(protected ModeloRepository $modeloRepository)
+    {
+    }
 
     public function lista(Request $request)
     {
         try {
-            $query = Modelo::with(['marca' => function($query) use ($request) {
-                if ($request->has('atributos_marca')) {
-                    $atributos_marca = explode(',', $request->input('atributos_marca'));
-
-                    // Filtra os atributos permitidos
-                    $atributos_marca = array_intersect($atributos_marca, $this->allowedMarcaAttributes);
-
-                    // Adiciona 'id' se não estiver nos atributos para evitar erros de integridade
-                    if (!in_array('id', $atributos_marca)) {
-                        $atributos_marca[] = 'id';
-                    }
-
-                    $query->select($atributos_marca);
-                }
-            }]);
-
-            if ($request->has('atributos')) {
-                $atributos = explode(',', $request->input('atributos'));
-
-                // Filtra os atributos permitidos
-                $atributos = array_intersect($atributos, $this->allowedAttributes);
-
-                // Adiciona 'id' se não estiver nos atributos para evitar erros de integridade
-                if (!in_array('id', $atributos)) {
-                    $atributos[] = 'id';
-                }
-
-                $query->select($atributos);
+            if ($request->has('atributos_marca')) {
+                $atributos_marca = 'marca:id,' . $request->atributos_marca;
+                $this->modeloRepository->selectAtributosRegistrosRelacionados($atributos_marca);
+            } else {
+                $this->modeloRepository->selectAtributosRegistrosRelacionados('marca');
             }
 
-            return $query->paginate(10);
+            if ($request->has('filtro')) {
+                $this->modeloRepository->filtro($request->filtro);
+            }
 
+            if ($request->has('atributos')) {
+                $this->modeloRepository->selectAtributos($request->atributos);
+            }
+
+            return $this->modeloRepository->getResultado()->paginate(10);
         } catch (Exception $e) {
-            throw new Exception('Ocorreu um erro ao processar a solicitação.');
+            Log::error('Erro ao listar modelos: ' . $e->getMessage());
+            throw new Exception('Erro ao listar modelos');
         }
     }
 
     public function store(ModeloStoreRequest $request)
     {
-        $data = $request->validated();
+        try {
+            $data = $request->validated();
+            $data['slug'] = Str::slug($data['nome']);
 
-        $data['slug'] = Str::slug($data['nome']);
+            $path = $request->file('imagem')->store('imagens/modelos', 'public');
+            $data['imagem'] = $path;
 
-        $path = $request->file('imagem')->store('imagens/modelos', 'public');
-        $data['imagem'] = $path;
-
-        return Modelo::create($data);
+            return Modelo::create($data);
+        } catch (Exception $e) {
+            Log::error('Erro ao criar modelo: ' . $e->getMessage());
+            throw new Exception('Erro ao criar modelo');
+        }
     }
 
     public function update(ModeloUpdateRequest $request, Modelo $modelo)
     {
-        $data = $request->validated();
+        try {
+            $data = $request->validated();
+            $data['slug'] = Str::slug($data['nome']);
 
-        $data['slug'] = Str::slug($data['nome']);
+            if ($request->hasFile('imagem')) {
 
-        if ($request->hasFile('imagem')) {
+                if ($modelo->imagem) {
+                    Storage::disk('public')->delete($modelo->imagem);
+                }
 
-            if ($modelo->imagem) {
-                Storage::disk('public')->delete($modelo->imagem);
+                $path = $request->file('imagem')->store('imagens/modelos', 'public');
+                $data['imagem'] = $path;
             }
 
-            $path = $request->file('imagem')->store('imagens/modelos', 'public');
-            $data['imagem'] = $path;
+            $modelo->update($data);
+
+            return $modelo;
+        } catch (Exception $e) {
+            Log::error('Erro ao atualizar modelo: ' . $e->getMessage());
+            throw new Exception('Erro ao atualizar modelo');
         }
-
-        $modelo->update($data);
-
-        return $modelo;
     }
 
     public function destroy(Modelo $modelo)
     {
-        if ($modelo->imagem) {
-            Storage::disk('public')->delete($modelo->imagem);
-        }
+        try {
+            if ($modelo->imagem) {
+                Storage::disk('public')->delete($modelo->imagem);
+            }
 
-        $modelo->delete();
+            $modelo->delete();
+        } catch (Exception $e) {
+            Log::error('Erro ao deletar modelo: ' . $e->getMessage());
+            throw new Exception('Erro ao deletar modelo');
+        }
     }
 }

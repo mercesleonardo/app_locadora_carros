@@ -9,6 +9,7 @@ use App\Models\Modelo;
 use App\Services\ModeloServices;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class ModeloController extends Controller
 {
@@ -24,7 +25,8 @@ class ModeloController extends Controller
             $modelos = $this->modeloServices->lista($request);
             return response()->json($modelos);
         } catch (Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            Log::error('Erro ao listar modelos: ' . $e->getMessage());
+            return response()->json(['error' => 'Erro ao listar modelos'], 500);
         }
     }
 
@@ -33,9 +35,13 @@ class ModeloController extends Controller
      */
     public function store(ModeloStoreRequest $request)
     {
-           $modelo = $this->modeloServices->store($request);
-
-           return response()->json($modelo);
+        try {
+            $modelo = $this->modeloServices->store($request);
+            return response()->json($modelo);
+        } catch (Exception $e) {
+            Log::error('Erro ao criar modelo: ' . $e->getMessage());
+            return response()->json(['error' => 'Erro ao criar modelo'], 500);
+        }
     }
 
     /**
@@ -43,19 +49,27 @@ class ModeloController extends Controller
      */
     public function show(Modelo $modelo)
     {
-        $modelo->load('marca');
-        return response()->json($modelo);
+        try {
+            $modelo->load('marca');
+            return response()->json($modelo);
+        } catch (Exception $e) {
+            Log::error('Erro ao exibir modelo: ' . $e->getMessage());
+            return response()->json(['error' => 'Erro ao exibir modelo'], 500);
+        }
     }
-
 
     /**
      * Update the specified resource in storage.
      */
     public function update(ModeloUpdateRequest $request, Modelo $modelo)
     {
-        $modelo = $this->modeloServices->update($request, $modelo);
-
-        return response()->json($modelo);
+        try {
+            $modelo = $this->modeloServices->update($request, $modelo);
+            return response()->json($modelo);
+        } catch (Exception $e) {
+            Log::error('Erro ao atualizar modelo: ' . $e->getMessage());
+            return response()->json(['error' => 'Erro ao atualizar modelo'], 500);
+        }
     }
 
     /**
@@ -63,8 +77,12 @@ class ModeloController extends Controller
      */
     public function destroy(Modelo $modelo)
     {
-        $this->modeloServices->destroy($modelo);
-
-        return response()->json(["message" => "Modelo deletado com sucesso"]);
+        try {
+            $this->modeloServices->destroy($modelo);
+            return response()->json(["message" => "Modelo deletado com sucesso"]);
+        } catch (Exception $e) {
+            Log::error('Erro ao deletar modelo: ' . $e->getMessage());
+            return response()->json(['error' => 'Erro ao deletar modelo'], 500);
+        }
     }
 }

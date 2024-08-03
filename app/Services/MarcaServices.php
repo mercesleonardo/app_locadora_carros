@@ -5,14 +5,54 @@ namespace App\Services;
 use App\Http\Requests\MarcaStoreRequest;
 use App\Http\Requests\MarcaUpdateRequest;
 use App\Models\Marca;
+use App\Models\Modelo;
+use Exception;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class MarcaServices
 {
-    public function lista()
+    public function lista(Request $request)
     {
-        return Marca::with('modelos')->paginate(10);
+        try {
+            $query = Marca::with(['modelos' => function($query) use ($request) {
+                if ($request->has('atributos_modelos')) {
+                    $atributos_modelos = explode(',', $request->input('atributos_modelos'));
+
+                    if (!in_array('id', $atributos_modelos)) {
+                        $atributos_modelos[] = 'id';
+                    }
+
+                    $query->select($atributos_modelos);
+                }
+            }]);
+
+            if ($request->has('filtro')) {
+                $filtros = explode(';', $request->input('filtro'));
+                foreach ($filtros as $filtro) {
+                    $condicoes = explode(':', $filtro);
+                    if (count($condicoes) === 3) {
+                        $query = $query->where($condicoes[0], $condicoes[1], $condicoes[2]);
+                    }
+                }
+            }
+
+            if ($request->has('atributos')) {
+                $atributos = explode(',', $request->input('atributos'));
+
+                if (!in_array('id', $atributos)) {
+                    $atributos[] = 'id';
+                }
+
+                $query->select($atributos);
+            }
+
+            return $query->paginate(10);
+
+        } catch (Exception $e) {
+            throw new Exception('Ocorreu um erro ao processar a solicitação.');
+        }
     }
 
     public function store(MarcaStoreRequest $request)

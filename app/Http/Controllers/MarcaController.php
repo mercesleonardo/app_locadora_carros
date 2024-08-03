@@ -15,10 +15,9 @@ class MarcaController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $marcas = $this->marcaServices->lista();
-
+        $marcas = $this->marcaServices->lista($request);
         return response()->json($marcas);
     }
 
