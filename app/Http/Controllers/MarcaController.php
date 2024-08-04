@@ -6,7 +6,9 @@ use App\Http\Requests\MarcaStoreRequest;
 use App\Http\Requests\MarcaUpdateRequest;
 use App\Models\Marca;
 use App\Services\MarcaServices;
+use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class MarcaController extends Controller
 {
@@ -17,8 +19,13 @@ class MarcaController extends Controller
      */
     public function index(Request $request)
     {
-        $marcas = $this->marcaServices->lista($request);
-        return response()->json($marcas);
+        try {
+            $marcas = $this->marcaServices->lista($request);
+            return response()->json($marcas);
+        } catch (Exception $e) {
+            Log::error('Erro ao listar marcas: ' . $e->getMessage());
+            return response()->json(['error' => 'Erro ao listar marcas'], 500);
+        }
     }
 
     /**
@@ -26,9 +33,13 @@ class MarcaController extends Controller
      */
     public function store(MarcaStoreRequest $request)
     {
-        $marca = $this->marcaServices->store($request);
-
-        return response()->json($marca);
+        try {
+            $marca = $this->marcaServices->store($request);
+            return response()->json($marca);
+        } catch (Exception $e) {
+            Log::error('Erro ao criar marca: ' . $e->getMessage());
+            return response()->json(['error' => 'Erro ao criar marca'], 500);
+        }
     }
 
     /**
@@ -36,8 +47,13 @@ class MarcaController extends Controller
      */
     public function show(Marca $marca)
     {
-        $marca->load('modelos');
-        return response()->json($marca);
+        try {
+            $marca->load('modelos');
+            return response()->json($marca);
+        } catch (Exception $e) {
+            Log::error('Erro ao exibir marca: ' . $e->getMessage());
+            return response()->json(['error' => 'Erro ao exibir marca'], 500);
+        }
     }
 
     /**
@@ -46,9 +62,13 @@ class MarcaController extends Controller
     public function update(MarcaUpdateRequest $request, Marca $marca)
     {
 
-        $marca = $this->marcaServices->update($request, $marca);
-
-        return response()->json($marca);
+        try {
+            $marca = $this->marcaServices->update($request, $marca);
+            return response()->json($marca);
+        } catch (Exception $e) {
+            Log::error('Erro ao atualizar marca: ' . $e->getMessage());
+            return response()->json(['error' => 'Erro ao atualizar marca'], 500);
+        }
     }
 
     /**
@@ -56,8 +76,12 @@ class MarcaController extends Controller
      */
     public function destroy(Marca $marca)
     {
-        $this->marcaServices->destroy($marca);
-
-        return response()->json(["message" => "Marca deletada com sucesso"]);
+        try {
+            $this->marcaServices->destroy($marca);
+            return response()->json(["message" => "Marca deletada com sucesso"]);
+        } catch (Exception $e) {
+            Log::error('Erro ao deletar marca: ' . $e->getMessage());
+            return response()->json(['error' => 'Erro ao deletar marca'], 500);
+        }
     }
 }

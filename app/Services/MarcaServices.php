@@ -6,94 +6,95 @@ use App\Http\Requests\MarcaStoreRequest;
 use App\Http\Requests\MarcaUpdateRequest;
 use App\Models\Marca;
 use App\Models\Modelo;
+use App\Repositories\MarcaRepository;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class MarcaServices
 {
+    public function __construct(protected MarcaRepository $marcaRepository)
+    {
+    }
     public function lista(Request $request)
     {
         try {
-            $query = Marca::with(['modelos' => function($query) use ($request) {
-                if ($request->has('atributos_modelos')) {
-                    $atributos_modelos = explode(',', $request->input('atributos_modelos'));
-
-                    if (!in_array('id', $atributos_modelos)) {
-                        $atributos_modelos[] = 'id';
-                    }
-
-                    $query->select($atributos_modelos);
-                }
-            }]);
+            if ($request->has('atributos_modelos')) {
+                $atributos_modelos = 'modelos:id,' . $request->atributos_modelos;
+                $this->marcaRepository->selectAtributosRegistrosRelacionados($atributos_modelos);
+            } else {
+                $this->marcaRepository->selectAtributosRegistrosRelacionados('modelos');
+            }
 
             if ($request->has('filtro')) {
-                $filtros = explode(';', $request->input('filtro'));
-                foreach ($filtros as $filtro) {
-                    $condicoes = explode(':', $filtro);
-                    if (count($condicoes) === 3) {
-                        $query = $query->where($condicoes[0], $condicoes[1], $condicoes[2]);
-                    }
-                }
+                $this->marcaRepository->filtro($request->filtro);
             }
 
             if ($request->has('atributos')) {
-                $atributos = explode(',', $request->input('atributos'));
-
-                if (!in_array('id', $atributos)) {
-                    $atributos[] = 'id';
-                }
-
-                $query->select($atributos);
+                $this->marcaRepository->selectAtributos($request->atributos);
             }
 
-            return $query->paginate(10);
-
+            return $this->marcaRepository->getResultado()->paginate(10);
         } catch (Exception $e) {
-            throw new Exception('Ocorreu um erro ao processar a solicitação.');
+            Log::error('Erro ao listar marcas: ' . $e->getMessage());
+            throw new Exception('Erro ao listar marcas');
         }
     }
 
     public function store(MarcaStoreRequest $request)
     {
-        $data = $request->validated();
+        try {
+            $data = $request->validated();
+            $data['slug'] = Str::slug($data['nome']);
 
-        $data['slug'] = Str::slug($data['nome']);
+            $path = $request->file('imagem')->store('imagens/marcas', 'public');
+            $data['imagem'] = $path;
 
-        $path = $request->file('imagem')->store('imagens', 'public');
-        $data['imagem'] = $path;
-
-        return Marca::create($data);
+            return Marca::create($data);
+        } catch (Exception $e) {
+            Log::error('Erro ao criar marca: ' . $e->getMessage());
+            throw new Exception('Erro ao criar marca');
+        }
     }
 
     public function update(MarcaUpdateRequest $request, Marca $marca)
     {
-        $data = $request->validated();
+        try {
+            $data = $request->validated();
+            $data['slug'] = Str::slug($data['nome']);
 
-        $data['slug'] = Str::slug($data['nome']);
+            if ($request->hasFile('imagem')) {
 
-        if ($request->hasFile('imagem')) {
+                if ($marca->imagem) {
+                    Storage::disk('public')->delete($marca->imagem);
+                }
 
-            if ($marca->imagem) {
-                Storage::disk('public')->delete($marca->imagem);
+                $path = $request->file('imagem')->store('imagens/marcas', 'public');
+                $data['imagem'] = $path;
             }
 
-            $path = $request->file('imagem')->store('imagens', 'public');
-            $data['imagem'] = $path;
+            $marca->update($data);
+
+            return $marca;
+        } catch (Exception $e) {
+            Log::error('Erro ao atualizar marca: ' . $e->getMessage());
+            throw new Exception('Erro ao atualizar marca');
         }
-
-        $marca->update($data);
-
-        return $marca;
     }
 
     public function destroy(Marca $marca)
     {
-        if ($marca->imagem) {
-            Storage::disk('public')->delete($marca->imagem);
-        }
+        try {
+            if ($marca->imagem) {
+                Storage::disk('public')->delete($marca->imagem);
+            }
 
-        $marca->delete();
+            $marca->delete();
+        } catch (Exception $e) {
+            Log::error('Erro ao deletar marca: ' . $e->getMessage());
+            throw new Exception('Erro ao deletar marca');
+        }
     }
 }

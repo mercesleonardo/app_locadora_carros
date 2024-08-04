@@ -23,6 +23,7 @@ class ModeloServices
         try {
             if ($request->has('atributos_marca')) {
                 $atributos_marca = 'marca:id,' . $request->atributos_marca;
+
                 $this->modeloRepository->selectAtributosRegistrosRelacionados($atributos_marca);
             } else {
                 $this->modeloRepository->selectAtributosRegistrosRelacionados('marca');
