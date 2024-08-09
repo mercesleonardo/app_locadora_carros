@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Carro;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -12,6 +13,6 @@ class CarroSeeder extends Seeder
      */
     public function run(): void
     {
-        //
+        Carro::factory()->count(20)->create();
     }
 }

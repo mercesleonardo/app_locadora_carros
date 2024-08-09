@@ -43,7 +43,9 @@ class CarroServices
     public function store(CarroStoreRequest $request)
     {
         try {
-            return Carro::create($request->validated());
+            $data = $request->validated();
+            $data['placa'] = strtoupper($request->placa);
+            return Carro::create($data);
         } catch (Exception $e) {
             Log::error('Erro ao criar carro: ' . $e->getMessage());
             throw new Exception('Erro ao criar carro');
@@ -53,7 +55,9 @@ class CarroServices
     public function update(CarroUpdateRequest $request, Carro $carro)
     {
         try {
-            $carro->update($request->validated());
+            $data = $request->validated();
+            $data['placa'] = strtoupper($request->placa);
+            $carro->update($data);
             return $carro;
         } catch (Exception $e) {
             Log::error('Erro ao atualizar carro: ' . $e->getMessage());

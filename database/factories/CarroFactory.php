@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Modelo;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -17,7 +18,10 @@ class CarroFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'modelo_id' => Modelo::factory(),
+            'placa' => strtoupper(fake()->regexify('[A-Z]{3}[0-9]{4}')),
+            'disponivel' => fake()->boolean(),
+            'km' => fake()->numberBetween(0, 100000),
         ];
     }
 }
