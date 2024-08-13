@@ -17,7 +17,7 @@ class AuthController extends Controller
         }
 
         return response()->json([
-            'access_token' => $token,
+            'token' => $token,
             'token_type' => 'Bearer',
             'expires_in' => auth('api')->factory()->getTTL() * 60 // Tempo de expiração em segundos
         ]);
