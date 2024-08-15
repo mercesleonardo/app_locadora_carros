@@ -23,6 +23,7 @@ import InputContainerComponent from "./components/InputContainerComponent.vue";
 import TableComponent from "./components/TableComponent.vue";
 import CardComponent from "./components/CardComponent.vue";
 import ModalComponent from "./components/ModalComponent.vue";
+import AlertComponent from "./components/AlertComponent.vue"
 
 app.component('example-component', ExampleComponent);
 app.component('home-component', HomeComponent);
@@ -32,6 +33,7 @@ app.component('input-container-component', InputContainerComponent);
 app.component('table-component', TableComponent);
 app.component('card-component', CardComponent);
 app.component('modal-component', ModalComponent);
+app.component('alert-component', AlertComponent);
 
 /**
  * The following block of code may be used to automatically register your

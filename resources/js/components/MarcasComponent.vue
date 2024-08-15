@@ -37,26 +37,85 @@
             </div>
         </div>
         <modal-component id="modalMarca" titulo="Adicionar marca">
+            <template v-slot:alertas>
+                <alert-component tipo="success"></alert-component>
+                <alert-component tipo="danger"></alert-component>
+            </template>
             <template v-slot:conteudo>
                 <div class="form-group">
                     <div class="col mb-3">
                         <input-container-component titulo="Nome da marca" id="novoNome" id-help="novoNomeHelp" texto-ajuda="Informe o nome da marca">
-                            <input type="text" class="form-control" id="novoNome" aria-describedby="novoNomeHelp" placeholder="Nome da marca">
+                            <input type="text" class="form-control" id="novoNome" aria-describedby="novoNomeHelp" placeholder="Nome da marca" v-model="nomeMarca">
                         </input-container-component>
+                        {{nomeMarca}}
                     </div>
                     <div class="col mb-3">
                         <input-container-component titulo="Imagem" id="novoImagem" id-help="novoImagemHelp" texto-ajuda="Imagem da marca">
-                            <input type="file" class="form-control-file" id="novoImagem" aria-describedby="novoImagemHelp">
+                            <input type="file" class="form-control-file" id="novoImagem" aria-describedby="novoImagemHelp" @change="carregarImagem($event)">
                         </input-container-component>
+                        {{arquivoImagem}}
                     </div>
                 </div>
             </template>
             <template v-slot:rodape>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                <button type="button" class="btn btn-primary">Salvar</button>
+                <button type="button" class="btn btn-primary" @click="salvar()">Salvar</button>
             </template>
         </modal-component>
     </div>
 </template>
-<script setup lang="ts">
+<script>
+    export default {
+        computed: {
+            token() {
+                let token = document.cookie.split(';').find(indice => {
+                    return indice.includes('token=')
+                })
+
+                token = token.split('=')[1]
+                token = 'Bearer ' + token
+                return token
+            }
+        },
+        data() {
+            return {
+                urlBase: 'http://localhost:80/api/v1/marca',
+                nomeMarca: '',
+                arquivoImagem: []
+            }
+        },
+        methods: {
+            carregarImagem(event) {
+                this.arquivoImagem = event.target.files;
+            },
+            salvar: function () {
+
+                let formData = new FormData();
+                formData.append('nome', this.nomeMarca);
+                formData.append('imagem', this.arquivoImagem[0]);
+
+                let config = {
+                    headers: {
+                        'Content-Type':'multipart/form-data',
+                        'Accept':'application/json',
+                        'Authorization': this.token
+
+                    }
+                }
+
+                axios.post(this.urlBase, formData, config)
+                .then(response => {
+                    console.log(response);
+                    // this.nomeMarca = '';
+                    // this.arquivoImagem = [];
+                    // Swal.fire('Marca salva com sucesso!');
+
+                })
+                .catch(errors => {
+                    console.log(errors);
+                    // Swal.fire('Ocorreu um erro ao salvar a marca!');
+                });
+            }
+        }
+    }
 </script>
