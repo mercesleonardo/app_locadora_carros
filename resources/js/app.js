@@ -19,11 +19,19 @@ import ExampleComponent from './components/ExampleComponent.vue';
 import LoginComponent from './components/LoginComponent.vue';
 import HomeComponent from './components/HomeComponent.vue';
 import MarcasComponent from './components/MarcasComponent.vue';
+import InputContainerComponent from "./components/InputContainerComponent.vue";
+import TableComponent from "./components/TableComponent.vue";
+import CardComponent from "./components/CardComponent.vue";
+import ModalComponent from "./components/ModalComponent.vue";
 
 app.component('example-component', ExampleComponent);
 app.component('home-component', HomeComponent);
 app.component('marcas-component', MarcasComponent);
 app.component('login-component', LoginComponent);
+app.component('input-container-component', InputContainerComponent);
+app.component('table-component', TableComponent);
+app.component('card-component', CardComponent);
+app.component('modal-component', ModalComponent);
 
 /**
  * The following block of code may be used to automatically register your
