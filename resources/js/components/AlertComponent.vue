@@ -1,17 +1,22 @@
 <template>
     <div :class="estilo" role="alert">
-        A simple success alert—check it out!
-        {{tipo}}
+        {{ titulo }}
+        <hr>
+        <p>{{ detalhes.mensagem }}</p>
+        <br>
+        <ul v-if="detalhes.dados">
+            <li v-for="(e, key) in detalhes.dados" :key="key">{{ e[0] }}</li>
+        </ul>
     </div>
 </template>
 
 <script>
-    export default {
-        props: ['tipo'],
-        computed: {
-            estilo() {
-                return 'alert alert-'+this.tipo
-            }
+export default {
+    props: ['tipo', 'titulo', 'detalhes', 'transacaoStatus'],
+    computed: {
+        estilo() {
+            return 'alert alert-' + this.tipo
         }
     }
+}
 </script>

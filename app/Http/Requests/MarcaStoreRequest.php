@@ -34,6 +34,7 @@ class MarcaStoreRequest extends FormRequest
             'nome.unique' => 'Este nome já está em uso.',
             'imagem.required' => 'A imagem é obrigatória.',
             'imagem.image' => 'O arquivo deve ser uma imagem.',
+            'imagem.file' => 'A imagem precisa ser um arquivo',
             'imagem.mimes' => 'A imagem deve ser dos tipos: jpeg, png, jpg, gif, svg.',
             'imagem.max' => 'A imagem não pode ser maior que 2MB.'
         ];

@@ -38,8 +38,8 @@
         </div>
         <modal-component id="modalMarca" titulo="Adicionar marca">
             <template v-slot:alertas>
-                <alert-component tipo="success"></alert-component>
-                <alert-component tipo="danger"></alert-component>
+                <alert-component tipo="success" :detalhes="transacaoDetalhes" titulo="Cadastro realizado com sucesso" v-if="transacaoStatus === 'adicionado'"></alert-component>
+                <alert-component tipo="danger" :detalhes="transacaoDetalhes" titulo="Erro ao tentar cadastrar a marca" v-if="transacaoStatus === 'erro'"></alert-component>
             </template>
             <template v-slot:conteudo>
                 <div class="form-group">
@@ -65,57 +65,64 @@
     </div>
 </template>
 <script>
-    export default {
-        computed: {
-            token() {
-                let token = document.cookie.split(';').find(indice => {
-                    return indice.includes('token=')
-                })
+export default {
+    computed: {
+        token() {
+            let token = document.cookie.split(';').find(indice => {
+                return indice.includes('token=')
+            })
 
-                token = token.split('=')[1]
-                token = 'Bearer ' + token
-                return token
-            }
+            token = token.split('=')[1]
+            token = 'Bearer ' + token
+            return token
+        }
+    },
+    data() {
+        return {
+            urlBase: 'http://localhost:80/api/v1/marca',
+            nomeMarca: '',
+            arquivoImagem: null,
+            transacaoStatus: '',
+            transacaoDetalhes: {},
+        }
+    },
+    methods: {
+        carregarImagem(event) {
+            this.arquivoImagem = event.target.files[0];
         },
-        data() {
-            return {
-                urlBase: 'http://localhost:80/api/v1/marca',
-                nomeMarca: '',
-                arquivoImagem: []
-            }
-        },
-        methods: {
-            carregarImagem(event) {
-                this.arquivoImagem = event.target.files;
-            },
-            salvar: function () {
+        salvar: function () {
 
-                let formData = new FormData();
-                formData.append('nome', this.nomeMarca);
-                formData.append('imagem', this.arquivoImagem[0]);
+            let formData = new FormData();
+            formData.append('nome', this.nomeMarca);
+            formData.append('imagem', this.arquivoImagem);
 
-                let config = {
-                    headers: {
-                        'Content-Type':'multipart/form-data',
-                        'Accept':'application/json',
-                        'Authorization': this.token
+            let config = {
+                headers: {
+                    'Content-Type':'multipart/form-data',
+                    'Accept':'application/json',
+                    'Authorization': this.token
 
-                    }
                 }
+            }
 
-                axios.post(this.urlBase, formData, config)
+            axios.post(this.urlBase, formData, config)
                 .then(response => {
+                    this.transacaoStatus = 'adicionado'
+                    this.transacaoDetalhes = {
+                        mensagem: 'Id do registro: ' + response.data.id
+                    }
                     console.log(response);
-                    // this.nomeMarca = '';
-                    // this.arquivoImagem = [];
-                    // Swal.fire('Marca salva com sucesso!');
 
                 })
                 .catch(errors => {
-                    console.log(errors);
-                    // Swal.fire('Ocorreu um erro ao salvar a marca!');
-                });
-            }
+                    this.transacaoStatus = 'erro'
+                    this.transacaoDetalhes = {
+                        mensagem : errors.response.data.message,
+                        dados: errors.response.data.errors
+                    }
+                }
+            );
         }
     }
+}
 </script>
