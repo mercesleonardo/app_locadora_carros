@@ -27,12 +27,30 @@
                 <!-- Início da lista de marcas -->
                 <card-component titulo="Relação das marcas">
                     <template v-slot:conteudo>
-                        <table-component :dados="marcas" :titulos="['id', 'nome', 'imagem']">
+                        <table-component
+                            :dados="marcas.data"
+                            :titulos="{
+                                id: {titulo: 'ID', tipo: 'texto'},
+                                nome: {titulo: 'Nome', tipo: 'texto'},
+                                imagem: {titulo: 'Imagem', tipo: 'imagem'},
+                                created_at: {titulo: 'Criação', tipo: 'data'}
+                            }">
 
                         </table-component>
                     </template>
                     <template v-slot:rodape>
-                        <button type="button" class="btn btn-primary float-sm-end" data-bs-toggle="modal" data-bs-target="#modalMarca">Adicionar</button>
+                        <div class="row">
+                            <div class="col-10">
+                                <paginate-component>
+                                    <li v-for="(l, key) in marcas.links" :key="key" :class="['page-item', { active: l.active }]" @click="paginacao(l)">
+                                        <a class="page-link" v-html="l.label"></a>
+                                    </li>
+                                </paginate-component>
+                            </div>
+                            <div class="col-2">
+                                <button type="button" class="btn btn-primary float-sm-end" data-bs-toggle="modal" data-bs-target="#modalMarca">Adicionar</button>
+                            </div>
+                        </div>
                     </template>
                 </card-component>
                 <!-- Fim do lista de marcas -->
@@ -70,50 +88,60 @@
 export default {
     computed: {
         token() {
-            let token = document.cookie.split(';').find(indice => {
-                return indice.includes('token=')
-            })
+            let token = document.cookie.split(';').find(indice => indice.includes('token='));
 
-            token = token.split('=')[1]
-            token = 'Bearer ' + token
-            return token
+            if (!token) {
+                console.error('Token não encontrado');
+                return null;
+            }
+
+            token = token.split('=')[1];
+            return 'Bearer ' + token;
         }
     },
     data() {
         return {
+            loading: false,
             urlBase: 'http://localhost:80/api/v1/marca',
             nomeMarca: '',
             arquivoImagem: null,
             transacaoStatus: '',
             transacaoDetalhes: {},
-            marcas: {}
+            marcas: {data: []}
         }
     },
     methods: {
+        paginacao(l) {
+            if (l.url) {
+                this.urlBase = l.url
+                this.carregarLista();
+            }
+        },
         carregarLista() {
-
             let config = {
                 headers: {
                     'Accept':'application/json',
                     'Authorization': this.token
 
                 }
-            }
+            };
 
+            this.loading = true;
             axios.get(this.urlBase, config)
                .then(response => {
-                    this.marcas = response.data.data;
-                    console.log(this.marcas);
+                    this.marcas = response.data;
                 })
                .catch(errors => {
                     console.log(errors);
+                })
+                .finally(() => {
+                    this.loading = false;
                 });
         },
         carregarImagem(event) {
             this.arquivoImagem = event.target.files[0];
         },
         salvar: function () {
-
             let formData = new FormData();
             formData.append('nome', this.nomeMarca);
             formData.append('imagem', this.arquivoImagem);
@@ -133,8 +161,6 @@ export default {
                     this.transacaoDetalhes = {
                         mensagem: 'Id do registro: ' + response.data.id
                     }
-                    console.log(response);
-
                 })
                 .catch(errors => {
                     this.transacaoStatus = 'erro'

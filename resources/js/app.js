@@ -24,6 +24,7 @@ import TableComponent from "./components/TableComponent.vue";
 import CardComponent from "./components/CardComponent.vue";
 import ModalComponent from "./components/ModalComponent.vue";
 import AlertComponent from "./components/AlertComponent.vue"
+import PaginateComponent from "./components/PaginateComponent.vue";
 
 app.component('example-component', ExampleComponent);
 app.component('home-component', HomeComponent);
@@ -34,6 +35,7 @@ app.component('table-component', TableComponent);
 app.component('card-component', CardComponent);
 app.component('modal-component', ModalComponent);
 app.component('alert-component', AlertComponent);
+app.component('paginate-component', PaginateComponent);
 
 /**
  * The following block of code may be used to automatically register your

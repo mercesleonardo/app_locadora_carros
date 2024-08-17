@@ -36,7 +36,7 @@ class MarcaServices
                 $this->marcaRepository->selectAtributos($request->atributos);
             }
 
-            return $this->marcaRepository->getResultado()->paginate(10);
+            return $this->marcaRepository->getResultado()->paginate(3);
         } catch (Exception $e) {
             Log::error('Erro ao listar marcas: ' . $e->getMessage());
             throw new Exception('Erro ao listar marcas');
