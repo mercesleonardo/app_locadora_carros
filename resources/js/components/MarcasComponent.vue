@@ -8,18 +8,18 @@
                         <div class="row">
                             <div class="col mb-3">
                                 <input-container-component titulo="ID" id="inputId" id-help="idHelp" texto-ajuda="Opcional. Informe o ID da marca">
-                                    <input type="number" class="form-control" id="inputId" aria-describedby="idHelp" placeholder="ID">
+                                    <input type="number" class="form-control" id="inputId" aria-describedby="idHelp" placeholder="ID" v-model="busca.id">
                                 </input-container-component>
                             </div>
                             <div class="col mb-3">
                                 <input-container-component titulo="Nome da marca" id="inputNome" id-help="nomeHelp" texto-ajuda="Opcional. Informe o nome da marca">
-                                    <input type="text" class="form-control" id="inputNome" aria-describedby="nomeHelp" placeholder="Nome da marca">
+                                    <input type="text" class="form-control" id="inputNome" aria-describedby="nomeHelp" placeholder="Nome da marca" v-model="busca.nome">
                                 </input-container-component>
                             </div>
                         </div>
                     </template>
                     <template v-slot:rodape>
-                        <button type="submit" class="btn btn-primary float-sm-end">Pesquisar</button>
+                        <button type="submit" class="btn btn-primary float-sm-end" @click="pesquisar()">Pesquisar</button>
                     </template>
                 </card-component>
                 <!-- Fim do card de busca -->
@@ -29,6 +29,9 @@
                     <template v-slot:conteudo>
                         <table-component
                             :dados="marcas.data"
+                            :visualizar="{visivel: true, dataToggle: 'modal', dataTarget: '#modalVisualizacao'}"
+                            :editar="true"
+                            :excluir="true"
                             :titulos="{
                                 id: {titulo: 'ID', tipo: 'texto'},
                                 nome: {titulo: 'Nome', tipo: 'texto'},
@@ -56,6 +59,7 @@
                 <!-- Fim do lista de marcas -->
             </div>
         </div>
+        <!-- Início do modal de inclusão de marca -->
         <modal-component id="modalMarca" titulo="Adicionar marca">
             <template v-slot:alertas>
                 <alert-component tipo="success" :detalhes="transacaoDetalhes" titulo="Cadastro realizado com sucesso" v-if="transacaoStatus === 'adicionado'"></alert-component>
@@ -82,6 +86,20 @@
                 <button type="button" class="btn btn-primary" @click="salvar()">Salvar</button>
             </template>
         </modal-component>
+        <!-- Fim do modal de inclusão de marca -->
+
+        <!-- Início do modal de visualizaçao de marca -->
+        <modal-component id="modalVisualizacao" titulo="Visualizar marca">
+            <template v-slot:alertas></template>
+            <template v-slot:conteudo>
+                Teste
+            </template>
+            <template v-slot:rodape>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </template>
+        </modal-component>
+        <!-- Fim do modal de visualizaçao de marca -->
+
     </div>
 </template>
 <script>
@@ -95,8 +113,7 @@ export default {
                 return null;
             }
 
-            token = token.split('=')[1];
-            return 'Bearer ' + token;
+            return 'Bearer ' + token.split('=')[1];
         }
     },
     data() {
@@ -107,36 +124,58 @@ export default {
             arquivoImagem: null,
             transacaoStatus: '',
             transacaoDetalhes: {},
-            marcas: {data: []}
+            marcas: {data: []},
+            busca: {
+                id: '',
+                nome: ''
+            },
+            urlPaginacao: '',
+            urlFiltro: '',
+            erro: null, // Adicionando estado de erro
+            sucesso: null // Adicionando estado de sucesso
         }
     },
     methods: {
+        pesquisar() {
+            let filtro = ''
+
+            for (let chave in this.busca) {
+                if (this.busca[chave]) {
+                    if (filtro !== '') {
+                        filtro += ';';
+                    }
+                    filtro += `${chave}:like:${this.busca[chave]}`;
+                }
+            }
+
+            this.urlFiltro = filtro ? `&filtro=${filtro}` : '';
+            this.urlPaginacao = 'page=1';
+            this.carregarLista();
+        },
         paginacao(l) {
             if (l.url) {
-                this.urlBase = l.url
+                this.urlPaginacao = l.url.split('?')[1];
                 this.carregarLista();
             }
         },
         carregarLista() {
-            let config = {
+            const url = `${this.urlBase}?${this.urlPaginacao}${this.urlFiltro}`;
+            const config = {
                 headers: {
                     'Accept':'application/json',
                     'Authorization': this.token
-
                 }
             };
 
-            this.loading = true;
-            axios.get(this.urlBase, config)
+            axios.get(url, config)
                .then(response => {
                     this.marcas = response.data;
                 })
-               .catch(errors => {
-                    console.log(errors);
+               .catch(error => {
+                    this.erro = 'Erro ao carregar a lista de marcas.';
+                    console.log(error);
                 })
-                .finally(() => {
-                    this.loading = false;
-                });
+
         },
         carregarImagem(event) {
             this.arquivoImagem = event.target.files[0];
@@ -146,30 +185,42 @@ export default {
             formData.append('nome', this.nomeMarca);
             formData.append('imagem', this.arquivoImagem);
 
-            let config = {
+            const config = {
                 headers: {
                     'Content-Type':'multipart/form-data',
                     'Accept':'application/json',
                     'Authorization': this.token
 
                 }
-            }
+            };
 
             axios.post(this.urlBase, formData, config)
                 .then(response => {
                     this.transacaoStatus = 'adicionado'
                     this.transacaoDetalhes = {
-                        mensagem: 'Id do registro: ' + response.data.id
-                    }
+                        mensagem: `Id do registro: ${response.data.id}`
+                    };
+                    this.sucesso = 'Marca adicionada com sucesso!'; // Feedback de sucesso
+
+                    // Reseta o formulário após 3 segundos
+                    setTimeout(() => {
+                        this.resetForm();
+                    }, 3000);
                 })
                 .catch(errors => {
                     this.transacaoStatus = 'erro'
                     this.transacaoDetalhes = {
-                        mensagem : errors.response.data.message,
                         dados: errors.response.data.errors
-                    }
+                    };
+                    this.erro = 'Erro ao salvar a marca. Verifique os dados e tente novamente.'; // Feedback de erro
                 }
             );
+        },
+        resetForm() {
+            this.nomeMarca = '';
+            this.arquivoImagem = null;
+            this.transacaoStatus = '';
+            this.transacaoDetalhes = {};
         }
     },
     mounted() {

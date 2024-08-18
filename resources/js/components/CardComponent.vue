@@ -1,8 +1,8 @@
 <template>
-    <div className="card mb-3">
-        <div className="card-header">{{titulo}}</div>
+    <div class="card mb-3">
+        <div class="card-header text-center">{{titulo}}</div>
 
-        <div className="card-body">
+        <div class="card-body">
             <slot name="conteudo"></slot>
         </div>
         <div class="card-footer">
