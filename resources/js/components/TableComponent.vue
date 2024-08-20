@@ -4,7 +4,7 @@
             <thead class="table-light">
                 <tr>
                     <th v-for="(t, key) in titulos" :key="key" scope="col" class="text-center">{{ t.titulo }}</th>
-                    <th v-if="visualizar.visivel || editar || excluir" class="text-center">Ações</th>
+                    <th v-if="visualizar.visivel || editar || excluir.visivel" class="text-center">Ações</th>
                 </tr>
             </thead>
 
@@ -17,11 +17,11 @@
                         <img :src="'/storage/'+valor" alt="Imagem da marca" class="img-fluid" style="max-width: 40px; max-height: 40px;">
                     </span>
                 </td>
-                <td v-if="visualizar.visivel || editar || excluir" class="text-center">
+                <td v-if="visualizar.visivel || editar || excluir.visivel" class="text-center">
                     <div class="d-flex justify-content-center gap-2">
-                        <button v-if="visualizar.visivel" type="button" class="btn btn-outline-primary btn-sm" :data-bs-toggle="visualizar.dataToggle" :data-bs-target="visualizar.dataTarget">Visualizar</button>
+                        <button v-if="visualizar.visivel" type="button" class="btn btn-outline-primary btn-sm" :data-bs-toggle="visualizar.dataToggle" :data-bs-target="visualizar.dataTarget" @click="setStore(obj)">Visualizar</button>
                         <button v-if="editar" type="button" class="btn btn-outline-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalEditar">Editar</button>
-                        <button v-if="excluir" type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#modalExcluir">Excluir</button>
+                        <button v-if="excluir.visivel" type="button" class="btn btn-outline-danger btn-sm" :data-bs-toggle="excluir.dataToggle" :data-bs-target="excluir.dataTarget" @click="setStore(obj)">Excluir</button>
                     </div>
                 </td>
             </tr>
@@ -32,11 +32,17 @@
 
 <script>
 
-    import { mapState } from 'vuex';
+import {mapMutations, mapState} from 'vuex';
     export default {
         props: ['dados', 'titulos', 'visualizar', 'editar', 'excluir'],
+        methods: {
+            ...mapMutations(['setItem']), // Mapeia a mutation
+            setStore(obj) {
+                this.setItem(obj);
+            }
+        },
         computed: {
-            ...mapState(['teste']),
+            ...mapState(['item']),
             dadosFiltrados() {
                 let campos = Object.keys(this.titulos)
                 let dadosFiltrados = []

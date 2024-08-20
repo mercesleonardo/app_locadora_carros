@@ -3,12 +3,12 @@ import { createStore } from 'vuex';
 
 export default createStore({
     state: {
-        teste: 'Teste de vuex'
+        item: null // Inicialmente, item é nulo
     },
     mutations: {
-        setTeste(state, payload) {
-            state.teste = payload;
-        }
+        setItem(state, obj) {
+            state.item = obj; // Mutation para definir o estado de item
+        },
     },
     actions: {
         increment({ commit }) {

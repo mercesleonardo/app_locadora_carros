@@ -1,7 +1,7 @@
 <template>
-    <div className="container">
-        <div className="row justify-content-center">
-            <div className="col-md-8">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
                 <!-- Inicío do card de busca -->
                 <card-component titulo="Busca de marcas">
                     <template v-slot:conteudo>
@@ -31,7 +31,7 @@
                             :dados="marcas.data"
                             :visualizar="{visivel: true, dataToggle: 'modal', dataTarget: '#modalVisualizacao'}"
                             :editar="true"
-                            :excluir="true"
+                            :excluir="{visivel: true, dataToggle: 'modal', dataTarget: '#modalExcluir'}"
                             :titulos="{
                                 id: {titulo: 'ID', tipo: 'texto'},
                                 nome: {titulo: 'Nome', tipo: 'texto'},
@@ -92,7 +92,39 @@
         <modal-component id="modalVisualizacao" titulo="Visualizar marca">
             <template v-slot:alertas></template>
             <template v-slot:conteudo>
-                Teste
+                <!-- Verifica se 'item' está definido -->
+                <div v-if="item">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <input-container-component titulo="ID">
+                                <input type="text" class="form-control" readonly :value="item.id">
+                            </input-container-component>
+                        </div>
+                        <div class="col-md-6">
+                            <input-container-component titulo="Nome da marca">
+                                <input type="text" class="form-control" readonly :value="item.nome">
+                            </input-container-component>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <input-container-component titulo="Imagem">
+                                <div v-if="item.imagem">
+                                    <img :src="'storage/' + item.imagem" alt="Imagem da marca" class="img-fluid">
+                                </div>
+                                <div v-else>
+                                    <p>Imagem não disponível</p>
+                                </div>
+                            </input-container-component>
+                        </div>
+                        <div class="col-md-6">
+                            <input-container-component titulo="Data de criação">
+                                <input type="text" class="form-control" readonly :value="formatDate(item.created_at)">
+                            </input-container-component>
+                        </div>
+                    </div>
+                </div>
             </template>
             <template v-slot:rodape>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
@@ -100,13 +132,42 @@
         </modal-component>
         <!-- Fim do modal de visualizaçao de marca -->
 
+        <!-- Início do modal de remoção de marca -->
+        <modal-component id="modalExcluir" titulo="Remover marca">
+            <template v-slot:alertas></template>
+            <template v-slot:conteudo>
+                <!-- Verifica se 'item' está definido -->
+                <div v-if="item">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <input-container-component titulo="ID">
+                                <input type="text" class="form-control" readonly :value="item.id">
+                            </input-container-component>
+                        </div>
+                        <div class="col-md-6">
+                            <input-container-component titulo="Nome da marca">
+                                <input type="text" class="form-control" readonly :value="item.nome">
+                            </input-container-component>
+                        </div>
+                    </div>
+                </div>
+            </template>
+            <template v-slot:rodape>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                <button type="button" class="btn btn-danger" @click="excluir()">Excluir</button>
+            </template>
+        </modal-component>
+        <!-- Fim do modal de remoção de marca -->
+
     </div>
 </template>
 <script>
 import { mapState, mapMutations } from 'vuex';
 export default {
     computed: {
-        ...mapState(['teste']),
+        ...mapState({
+            item: state => state.item // Mapeia corretamente o estado 'item' do Vuex
+        }),
         token() {
             let token = document.cookie.split(';').find(indice => indice.includes('token='));
 
@@ -132,11 +193,42 @@ export default {
             },
             urlPaginacao: '',
             urlFiltro: '',
-            erro: null, // Adicionando estado de erro
-            sucesso: null // Adicionando estado de sucesso
         }
     },
     methods: {
+        formatDate(date) {
+            if (!date) return 'Data não disponível';
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            return new Date(date).toLocaleDateString('pt-BR', options);
+        },
+        excluir() {
+            if (!this.item) {
+                this.erro = 'Nenhum item selecionado para exclusão.';
+                return;
+            }
+
+            let confirmacao = confirm('Tem certeza que deseja remover esse registro?');
+            if (!confirmacao) return;
+
+            const url = `${this.urlBase}/${this.item.id}`;
+            const config = {
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': this.token
+                }
+            };
+
+            axios.delete(url, config)
+                .then(response => {
+                    console.log('Registro excluído com sucesso', response);
+                    this.carregarLista(); // Atualiza a lista após a exclusão
+                    this.resetItem(); // Reseta o item atual
+                })
+                .catch(error => {
+                    console.error('Erro ao tentar excluir o registro', error.response);
+                    this.erro = 'Erro ao tentar excluir o registro';
+                })
+        },
         pesquisar() {
             let filtro = ''
 
@@ -171,11 +263,11 @@ export default {
             axios.get(url, config)
                .then(response => {
                     this.marcas = response.data;
-                })
+               })
                .catch(error => {
                     this.erro = 'Erro ao carregar a lista de marcas.';
                     console.log(error);
-                })
+               })
 
         },
         carregarImagem(event) {
@@ -201,7 +293,6 @@ export default {
                     this.transacaoDetalhes = {
                         mensagem: `Id do registro: ${response.data.id}`
                     };
-                    this.sucesso = 'Marca adicionada com sucesso!'; // Feedback de sucesso
 
                     // Reseta o formulário após 3 segundos
                     setTimeout(() => {
@@ -213,15 +304,16 @@ export default {
                     this.transacaoDetalhes = {
                         dados: errors.response.data.errors
                     };
-                    this.erro = 'Erro ao salvar a marca. Verifique os dados e tente novamente.'; // Feedback de erro
-                }
-            );
+                });
         },
         resetForm() {
             this.nomeMarca = '';
             this.arquivoImagem = null;
             this.transacaoStatus = '';
             this.transacaoDetalhes = {};
+        },
+        resetItem() {
+            this.$store.commit('setItem', null); // Reseta o estado 'item' no Vuex
         }
     },
     mounted() {
