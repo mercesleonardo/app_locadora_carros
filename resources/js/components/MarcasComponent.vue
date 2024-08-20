@@ -103,8 +103,10 @@
     </div>
 </template>
 <script>
+import { mapState, mapMutations } from 'vuex';
 export default {
     computed: {
+        ...mapState(['teste']),
         token() {
             let token = document.cookie.split(';').find(indice => indice.includes('token='));
 
@@ -118,7 +120,6 @@ export default {
     },
     data() {
         return {
-            loading: false,
             urlBase: 'http://localhost:80/api/v1/marca',
             nomeMarca: '',
             arquivoImagem: null,

@@ -7,6 +7,9 @@
 import './bootstrap';
 import { createApp } from 'vue';
 
+/** Importando o Vuex store */
+import store from './store'; // Certifique-se de que o caminho para o store está correto
+
 /**
  * Next, we will create a fresh Vue application instance. You may then begin
  * registering components with the application instance so they are ready
@@ -54,5 +57,10 @@ app.component('paginate-component', PaginateComponent);
  * an "id" attribute of "app". This element is included with the "auth"
  * scaffolding. Otherwise, you will need to add an element yourself.
  */
+
+/**
+ * Registrando o Vuex store na instância do Vue
+ */
+app.use(store); // Registrando o Vuex store
 
 app.mount('#app');

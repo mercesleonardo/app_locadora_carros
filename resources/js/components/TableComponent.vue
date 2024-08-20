@@ -31,9 +31,12 @@
 </template>
 
 <script>
+
+    import { mapState } from 'vuex';
     export default {
         props: ['dados', 'titulos', 'visualizar', 'editar', 'excluir'],
         computed: {
+            ...mapState(['teste']),
             dadosFiltrados() {
                 let campos = Object.keys(this.titulos)
                 let dadosFiltrados = []
