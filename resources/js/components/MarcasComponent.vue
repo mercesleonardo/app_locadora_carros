@@ -134,8 +134,11 @@
 
         <!-- Início do modal de remoção de marca -->
         <modal-component id="modalExcluir" titulo="Remover marca">
-            <template v-slot:alertas></template>
-            <template v-slot:conteudo>
+            <template v-slot:alertas>
+                <alert-component tipo="success" titulo="Transação realizada com sucesso" :detalhes="transacao" v-if="transacao.status === 'sucesso'"></alert-component>
+                <alert-component tipo="danger" titulo="Erro na transação" :detalhes="transacao" v-if="transacao.status === 'erro'"></alert-component>
+            </template>
+            <template v-slot:conteudo v-if="transacao.status !== 'sucesso'">
                 <!-- Verifica se 'item' está definido -->
                 <div v-if="item">
                     <div class="row">
@@ -154,7 +157,7 @@
             </template>
             <template v-slot:rodape>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                <button type="button" class="btn btn-danger" @click="excluir()">Excluir</button>
+                <button type="button" class="btn btn-danger" @click="excluir()" v-if="transacao.status !== 'sucesso'">Excluir</button>
             </template>
         </modal-component>
         <!-- Fim do modal de remoção de marca -->
@@ -166,7 +169,8 @@ import { mapState, mapMutations } from 'vuex';
 export default {
     computed: {
         ...mapState({
-            item: state => state.item // Mapeia corretamente o estado 'item' do Vuex
+            item: state => state.item,
+            transacao: state => state.transacao
         }),
         token() {
             let token = document.cookie.split(';').find(indice => indice.includes('token='));
@@ -193,6 +197,7 @@ export default {
             },
             urlPaginacao: '',
             urlFiltro: '',
+            erro: '',
         }
     },
     methods: {
@@ -210,7 +215,8 @@ export default {
             let confirmacao = confirm('Tem certeza que deseja remover esse registro?');
             if (!confirmacao) return;
 
-            const url = `${this.urlBase}/${this.item.id}`;
+            // const url = `${this.urlBase}/${this.item.id}`;
+            const url = this.urlBase + '/434';
             const config = {
                 headers: {
                     'Accept': 'application/json',
@@ -220,13 +226,13 @@ export default {
 
             axios.delete(url, config)
                 .then(response => {
-                    console.log('Registro excluído com sucesso', response);
-                    this.carregarLista(); // Atualiza a lista após a exclusão
-                    this.resetItem(); // Reseta o item atual
+                    this.transacao.status = 'sucesso';
+                    this.transacao.mensagem = response.data.message;
+                    this.carregarLista();
                 })
                 .catch(error => {
-                    console.error('Erro ao tentar excluir o registro', error.response);
-                    this.erro = 'Erro ao tentar excluir o registro';
+                    this.transacao.status = 'erro';
+                    this.transacao.mensagem = 'Não foi possível deletar a marca';
                 })
         },
         pesquisar() {
@@ -294,7 +300,8 @@ export default {
                         mensagem: `Id do registro: ${response.data.id}`
                     };
 
-                    // Reseta o formulário após 3 segundos
+                    this.carregarLista();
+
                     setTimeout(() => {
                         this.resetForm();
                     }, 3000);
@@ -311,9 +318,6 @@ export default {
             this.arquivoImagem = null;
             this.transacaoStatus = '';
             this.transacaoDetalhes = {};
-        },
-        resetItem() {
-            this.$store.commit('setItem', null); // Reseta o estado 'item' no Vuex
         }
     },
     mounted() {

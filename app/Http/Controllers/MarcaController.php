@@ -61,7 +61,6 @@ class MarcaController extends Controller
      */
     public function update(MarcaUpdateRequest $request, Marca $marca)
     {
-
         try {
             $marca = $this->marcaServices->update($request, $marca);
             return response()->json($marca);
@@ -78,7 +77,7 @@ class MarcaController extends Controller
     {
         try {
             $this->marcaServices->destroy($marca);
-            return response()->json(["message" => "Marca deletada com sucesso"]);
+            return response()->json(["message" => "Marca deletada com sucesso"], 200);
         } catch (Exception $e) {
             Log::error('Erro ao deletar marca: ' . $e->getMessage());
             return response()->json(['error' => 'Erro ao deletar marca'], 500);

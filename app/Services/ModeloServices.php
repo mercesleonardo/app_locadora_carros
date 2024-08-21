@@ -20,82 +20,62 @@ class ModeloServices
 
     public function lista(Request $request)
     {
-        try {
-            if ($request->has('atributos_marca')) {
-                $atributos_marca = 'marca:id,' . $request->atributos_marca;
+        if ($request->has('atributos_marca')) {
+            $atributos_marca = 'marca:id,' . $request->atributos_marca;
 
-                $this->modeloRepository->selectAtributosRegistrosRelacionados($atributos_marca);
-            } else {
-                $this->modeloRepository->selectAtributosRegistrosRelacionados('marca');
-            }
-
-            if ($request->has('filtro')) {
-                $this->modeloRepository->filtro($request->filtro);
-            }
-
-            if ($request->has('atributos')) {
-                $this->modeloRepository->selectAtributos($request->atributos);
-            }
-
-            return $this->modeloRepository->getResultado()->paginate(10);
-        } catch (Exception $e) {
-            Log::error('Erro ao listar modelos: ' . $e->getMessage());
-            throw new Exception('Erro ao listar modelos');
+            $this->modeloRepository->selectAtributosRegistrosRelacionados($atributos_marca);
+        } else {
+            $this->modeloRepository->selectAtributosRegistrosRelacionados('marca');
         }
+
+        if ($request->has('filtro')) {
+            $this->modeloRepository->filtro($request->filtro);
+        }
+
+        if ($request->has('atributos')) {
+            $this->modeloRepository->selectAtributos($request->atributos);
+        }
+
+        return $this->modeloRepository->getResultado()->paginate(10);
     }
 
     public function store(ModeloStoreRequest $request)
     {
-        try {
-            $data = $request->validated();
-            $data['slug'] = Str::slug($data['nome']);
+        $data = $request->validated();
+        $data['slug'] = Str::slug($data['nome']);
 
-            $path = $request->file('imagem')->store('imagens/modelos', 'public');
-            $data['imagem'] = $path;
+        $path = $request->file('imagem')->store('imagens/modelos', 'public');
+        $data['imagem'] = $path;
 
-            return Modelo::create($data);
-        } catch (Exception $e) {
-            Log::error('Erro ao criar modelo: ' . $e->getMessage());
-            throw new Exception('Erro ao criar modelo');
-        }
+        return Modelo::create($data);
     }
 
     public function update(ModeloUpdateRequest $request, Modelo $modelo)
     {
-        try {
-            $data = $request->validated();
-            $data['slug'] = Str::slug($data['nome']);
+        $data = $request->validated();
+        $data['slug'] = Str::slug($data['nome']);
 
-            if ($request->hasFile('imagem')) {
+        if ($request->hasFile('imagem')) {
 
-                if ($modelo->imagem) {
-                    Storage::disk('public')->delete($modelo->imagem);
-                }
-
-                $path = $request->file('imagem')->store('imagens/modelos', 'public');
-                $data['imagem'] = $path;
-            }
-
-            $modelo->update($data);
-
-            return $modelo;
-        } catch (Exception $e) {
-            Log::error('Erro ao atualizar modelo: ' . $e->getMessage());
-            throw new Exception('Erro ao atualizar modelo');
-        }
-    }
-
-    public function destroy(Modelo $modelo)
-    {
-        try {
             if ($modelo->imagem) {
                 Storage::disk('public')->delete($modelo->imagem);
             }
 
-            $modelo->delete();
-        } catch (Exception $e) {
-            Log::error('Erro ao deletar modelo: ' . $e->getMessage());
-            throw new Exception('Erro ao deletar modelo');
+            $path = $request->file('imagem')->store('imagens/modelos', 'public');
+            $data['imagem'] = $path;
         }
+
+        $modelo->update($data);
+
+        return $modelo;
+    }
+
+    public function destroy(Modelo $modelo)
+    {
+        if ($modelo->imagem) {
+            Storage::disk('public')->delete($modelo->imagem);
+        }
+
+        $modelo->delete();
     }
 }

@@ -3,11 +3,14 @@ import { createStore } from 'vuex';
 
 export default createStore({
     state: {
-        item: null // Inicialmente, item é nulo
+        item: null, // Inicialmente, item é nulo
+        transacao: { status: '', mensagem: ''}
     },
     mutations: {
         setItem(state, obj) {
             state.item = obj; // Mutation para definir o estado de item
+            state.transacao.status = '';
+            state.transacao.mensagem = '';
         },
     },
     actions: {
