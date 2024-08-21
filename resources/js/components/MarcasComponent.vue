@@ -30,7 +30,7 @@
                         <table-component
                             :dados="marcas.data"
                             :visualizar="{visivel: true, dataToggle: 'modal', dataTarget: '#modalVisualizacao'}"
-                            :editar="true"
+                            :editar="{visivel: true, dataToggle: 'modal', dataTarget: '#modalEditar'}"
                             :excluir="{visivel: true, dataToggle: 'modal', dataTarget: '#modalExcluir'}"
                             :titulos="{
                                 id: {titulo: 'ID', tipo: 'texto'},
@@ -59,6 +59,7 @@
                 <!-- Fim do lista de marcas -->
             </div>
         </div>
+
         <!-- Início do modal de inclusão de marca -->
         <modal-component id="modalMarca" titulo="Adicionar marca">
             <template v-slot:alertas>
@@ -71,13 +72,11 @@
                         <input-container-component titulo="Nome da marca" id="novoNome" id-help="novoNomeHelp" texto-ajuda="Informe o nome da marca">
                             <input type="text" class="form-control" id="novoNome" aria-describedby="novoNomeHelp" placeholder="Nome da marca" v-model="nomeMarca">
                         </input-container-component>
-                        {{nomeMarca}}
                     </div>
                     <div class="col mb-3">
                         <input-container-component titulo="Imagem" id="novoImagem" id-help="novoImagemHelp" texto-ajuda="Imagem da marca">
                             <input type="file" class="form-control-file" id="novoImagem" aria-describedby="novoImagemHelp" @change="carregarImagem($event)">
                         </input-container-component>
-                        {{arquivoImagem}}
                     </div>
                 </div>
             </template>
@@ -131,6 +130,36 @@
             </template>
         </modal-component>
         <!-- Fim do modal de visualizaçao de marca -->
+
+        <!-- Início do modal de edição de marca -->
+        <modal-component id="modalEditar" titulo="Editar marca">
+            <template v-slot:alertas>
+
+            </template>
+            <template v-slot:conteudo>
+                <div v-if="item">
+                    <div class="form-group">
+                        <div class="col mb-3">
+                            <input-container-component titulo="Nome da marca" id="editarNome" id-help="editarNomeHelp" texto-ajuda="Informe o nome da marca">
+                                <input type="text" class="form-control" id="editarNome" aria-describedby="editarNomeHelp" placeholder="Nome da marca" v-model="item.nome">
+                            </input-container-component>
+                        </div>
+                        <div class="col mb-3">
+                            <input-container-component titulo="Imagem" id="editarImagem" id-help="editarImagemHelp" texto-ajuda="Imagem da marca">
+                                <input type="file" class="form-control-file" id="editarImagem" aria-describedby="editarImagemHelp" @change="carregarImagem($event)">
+                            </input-container-component>
+                        </div>
+                    </div>
+                </div>
+
+                {{item}}
+            </template>
+            <template v-slot:rodape>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                <button type="button" class="btn btn-primary" @click="editar()">Editar</button>
+            </template>
+        </modal-component>
+        <!-- Fim do modal de edição de marca -->
 
         <!-- Início do modal de remoção de marca -->
         <modal-component id="modalExcluir" titulo="Remover marca">
@@ -201,10 +230,68 @@ export default {
         }
     },
     methods: {
-        formatDate(date) {
-            if (!date) return 'Data não disponível';
-            const options = { year: 'numeric', month: 'long', day: 'numeric' };
-            return new Date(date).toLocaleDateString('pt-BR', options);
+        salvar: function () {
+            let formData = new FormData();
+            formData.append('nome', this.nomeMarca);
+            formData.append('imagem', this.arquivoImagem);
+
+            const config = {
+                headers: {
+                    'Content-Type':'multipart/form-data',
+                    'Accept':'application/json',
+                    'Authorization': this.token
+
+                }
+            };
+
+            axios.post(this.urlBase, formData, config)
+                .then(response => {
+                    this.transacaoStatus = 'adicionado'
+                    this.transacaoDetalhes = {
+                        mensagem: `Id do registro: ${response.data.id}`
+                    };
+
+                    this.carregarLista();
+
+                    setTimeout(() => {
+                        this.resetForm();
+                    }, 3000);
+                })
+                .catch(errors => {
+                    this.transacaoStatus = 'erro'
+                    this.transacaoDetalhes = {
+                        dados: errors.response.data.errors
+                    };
+                });
+        },
+        editar() {
+            let formData = new FormData();
+            formData.append('_method', 'patch');
+            formData.append('nome', this.item.nome);
+            if (this.arquivoImagem) {
+                formData.append('imagem', this.arquivoImagem);
+            }
+
+            const config = {
+                headers: {
+                    'Content-Type':'multipart/form-data',
+                    'Accept':'application/json',
+                    'Authorization': this.token
+
+                }
+            };
+
+            const url = `${this.urlBase}/${this.item.id}`;
+
+            axios.post(url, formData, config)
+                 .then(response => {
+                     console.log('Atualizado', response)
+                     this.carregarLista();
+                 })
+                .catch(error => {
+                    console.error('Erro ao atualizar', error.response)
+                 });
+
         },
         excluir() {
             if (!this.item) {
@@ -215,8 +302,7 @@ export default {
             let confirmacao = confirm('Tem certeza que deseja remover esse registro?');
             if (!confirmacao) return;
 
-            // const url = `${this.urlBase}/${this.item.id}`;
-            const url = this.urlBase + '/434';
+            const url = `${this.urlBase}/${this.item.id}`;
             const config = {
                 headers: {
                     'Accept': 'application/json',
@@ -257,6 +343,11 @@ export default {
                 this.carregarLista();
             }
         },
+        formatDate(date) {
+            if (!date) return 'Data não disponível';
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            return new Date(date).toLocaleDateString('pt-BR', options);
+        },
         carregarLista() {
             const url = `${this.urlBase}?${this.urlPaginacao}${this.urlFiltro}`;
             const config = {
@@ -267,51 +358,17 @@ export default {
             };
 
             axios.get(url, config)
-               .then(response => {
+                .then(response => {
                     this.marcas = response.data;
-               })
-               .catch(error => {
+                })
+                .catch(error => {
                     this.erro = 'Erro ao carregar a lista de marcas.';
                     console.log(error);
-               })
+                })
 
         },
         carregarImagem(event) {
             this.arquivoImagem = event.target.files[0];
-        },
-        salvar: function () {
-            let formData = new FormData();
-            formData.append('nome', this.nomeMarca);
-            formData.append('imagem', this.arquivoImagem);
-
-            const config = {
-                headers: {
-                    'Content-Type':'multipart/form-data',
-                    'Accept':'application/json',
-                    'Authorization': this.token
-
-                }
-            };
-
-            axios.post(this.urlBase, formData, config)
-                .then(response => {
-                    this.transacaoStatus = 'adicionado'
-                    this.transacaoDetalhes = {
-                        mensagem: `Id do registro: ${response.data.id}`
-                    };
-
-                    this.carregarLista();
-
-                    setTimeout(() => {
-                        this.resetForm();
-                    }, 3000);
-                })
-                .catch(errors => {
-                    this.transacaoStatus = 'erro'
-                    this.transacaoDetalhes = {
-                        dados: errors.response.data.errors
-                    };
-                });
         },
         resetForm() {
             this.nomeMarca = '';

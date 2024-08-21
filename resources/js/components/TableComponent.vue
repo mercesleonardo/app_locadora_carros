@@ -4,7 +4,7 @@
             <thead class="table-light">
                 <tr>
                     <th v-for="(t, key) in titulos" :key="key" scope="col" class="text-center">{{ t.titulo }}</th>
-                    <th v-if="visualizar.visivel || editar || excluir.visivel" class="text-center">Ações</th>
+                    <th v-if="visualizar.visivel || editar.visivel || excluir.visivel" class="text-center">Ações</th>
                 </tr>
             </thead>
 
@@ -17,10 +17,10 @@
                         <img :src="'/storage/'+valor" alt="Imagem da marca" class="img-fluid" style="max-width: 40px; max-height: 40px;">
                     </span>
                 </td>
-                <td v-if="visualizar.visivel || editar || excluir.visivel" class="text-center">
+                <td v-if="visualizar.visivel || editar.visivel || excluir.visivel" class="text-center">
                     <div class="d-flex justify-content-center gap-2">
                         <button v-if="visualizar.visivel" type="button" class="btn btn-outline-primary btn-sm" :data-bs-toggle="visualizar.dataToggle" :data-bs-target="visualizar.dataTarget" @click="setStore(obj)">Visualizar</button>
-                        <button v-if="editar" type="button" class="btn btn-outline-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalEditar">Editar</button>
+                        <button v-if="editar.visivel" type="button" class="btn btn-outline-warning btn-sm" :data-bs-toggle="editar.dataToggle" :data-bs-target="editar.dataTarget" @click="setStore(obj)">Editar</button>
                         <button v-if="excluir.visivel" type="button" class="btn btn-outline-danger btn-sm" :data-bs-toggle="excluir.dataToggle" :data-bs-target="excluir.dataTarget" @click="setStore(obj)">Excluir</button>
                     </div>
                 </td>
