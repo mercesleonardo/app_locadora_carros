@@ -189,7 +189,7 @@
                 <button type="button" class="btn btn-danger" @click="excluir()" v-if="transacao.status !== 'sucesso'">Excluir</button>
             </template>
         </modal-component>
-        <!-- Fim do modal de remoção de marca -->
+        <!-- Fim do modal remoção de marca -->
 
     </div>
 </template>
@@ -204,7 +204,7 @@ export default {
     },
     data() {
         return {
-            urlBase: 'http://localhost:80/api/v1/marca',
+            urlBase: 'http://laravel.test/api/v1/marca',
             nomeMarca: '',
             arquivoImagem: null,
             transacaoStatus: '',

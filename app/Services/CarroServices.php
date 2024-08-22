@@ -13,8 +13,7 @@ use Illuminate\Support\Facades\Log;
 class CarroServices
 {
     public function __construct(protected CarroRepository $carroRepository)
-    {
-    }
+    {}
     public function lista(Request $request)
     {
         if ($request->has('atributos_modelos')) {

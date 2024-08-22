@@ -38,17 +38,18 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 axios.interceptors.request.use(
     (config) => {
         // Adicionando o token de autenticação ao cabeçalho da requisição
-        let token = document.cookie.split(';').find(indice => indice.trim().startsWith('token='));
+        // const token = document.cookie.split(';').find(indice => indice.trim().startsWith('token='));
+        const token = document.cookie.split('; ').find(row => row.startsWith('token='));
 
         if (!token) {
             console.error('Token não encontrado');
             return Promise.reject(new Error('Token não encontrado'));
         }
 
-        config.headers.Authorization = 'Bearer ' + token.split('=')[1].trim();
+        const tokenValue = token.split('=')[1];
+        config.headers.Authorization = `Bearer ${tokenValue}`;
 
-        // Adicionando o tipo de conteúdo ao cabeçalho da requisição
-        config.headers.Accept = 'application/json'
+        config.headers.Accept = 'application/json';
 
         return config;
     },
@@ -66,13 +67,15 @@ axios.interceptors.response.use(
     },
     (error) => {
         if (error.response.status === 401 && error.response.data.message === 'Token has expired') {
-            axios.post('http://localhost:80/api/refresh')
+            axios.post('http://laravel.test/api/refresh')
                 .then(response => {
-                    document.cookie = 'token='+response.data.token+';SameSite=Lax'
+                    // document.cookie = 'token='+response.data.token+';SameSite=Lax'
+                    document.cookie = `token=${response.data.token}; SameSite=Lax; Secure; path=/`;
                     window.location.reload()
                 })
                 .catch(refreshError => {
                     console.error('Erro ao atualizar o token:', refreshError);
+                    return Promise.reject(refreshError);
                 });
         }
         return Promise.reject(error);
