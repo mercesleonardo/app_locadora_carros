@@ -4,7 +4,7 @@ import { createStore } from 'vuex';
 export default createStore({
     state: {
         item: null, // Inicialmente, item é nulo
-        transacao: { status: '', mensagem: ''}
+        transacao: { status: '', mensagem: '', dados: '' },
     },
     mutations: {
         setItem(state, obj) {

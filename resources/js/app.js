@@ -63,4 +63,10 @@ app.component('paginate-component', PaginateComponent);
  */
 app.use(store); // Registrando o Vuex store
 
+app.config.globalProperties.$formatDate = function(date) {
+    if (!date) return 'Data não disponível';
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    return new Date(date).toLocaleDateString('pt-BR', options);
+};
+
 app.mount('#app');

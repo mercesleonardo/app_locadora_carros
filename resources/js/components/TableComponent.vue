@@ -12,7 +12,7 @@
             <tr v-for="(obj, chave) in dadosFiltrados" :key="chave" class="align-middle">
                 <td v-for="(valor, chaveValor) in obj" :key="chaveValor" class="text-center">
                     <span v-if="titulos[chaveValor].tipo === 'texto'">{{valor}}</span>
-                    <span v-if="titulos[chaveValor].tipo === 'data'">{{ new Date(valor).toLocaleDateString() }}</span>
+                    <span v-if="titulos[chaveValor].tipo === 'data'">{{ $formatDate(valor) }}</span>
                     <span v-if="titulos[chaveValor].tipo === 'imagem'">
                         <img :src="'/storage/'+valor" alt="Imagem da marca" class="img-fluid" style="max-width: 40px; max-height: 40px;">
                     </span>
@@ -39,7 +39,7 @@ import {mapMutations, mapState} from 'vuex';
             ...mapMutations(['setItem']), // Mapeia a mutation
             setStore(obj) {
                 this.setItem(obj);
-            }
+            },
         },
         computed: {
             ...mapState(['item']),

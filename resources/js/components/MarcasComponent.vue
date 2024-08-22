@@ -119,7 +119,7 @@
                         </div>
                         <div class="col-md-6">
                             <input-container-component titulo="Data de criação">
-                                <input type="text" class="form-control" readonly :value="formatDate(item.created_at)">
+                                <input type="text" class="form-control" readonly :value="$formatDate(item.created_at)">
                             </input-container-component>
                         </div>
                     </div>
@@ -134,7 +134,8 @@
         <!-- Início do modal de edição de marca -->
         <modal-component id="modalEditar" titulo="Editar marca">
             <template v-slot:alertas>
-
+                <alert-component tipo="success" titulo="Transação realizada com sucesso" :detalhes="transacao" v-if="transacao.status === 'sucesso'"></alert-component>
+                <alert-component tipo="danger" titulo="Erro na transação" :detalhes="transacao" v-if="transacao.status === 'erro'"></alert-component>
             </template>
             <template v-slot:conteudo>
                 <div v-if="item">
@@ -152,7 +153,6 @@
                     </div>
                 </div>
 
-                {{item}}
             </template>
             <template v-slot:rodape>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
@@ -201,16 +201,6 @@ export default {
             item: state => state.item,
             transacao: state => state.transacao
         }),
-        token() {
-            let token = document.cookie.split(';').find(indice => indice.includes('token='));
-
-            if (!token) {
-                console.error('Token não encontrado');
-                return null;
-            }
-
-            return 'Bearer ' + token.split('=')[1];
-        }
     },
     data() {
         return {
@@ -238,9 +228,6 @@ export default {
             const config = {
                 headers: {
                     'Content-Type':'multipart/form-data',
-                    'Accept':'application/json',
-                    'Authorization': this.token
-
                 }
             };
 
@@ -275,9 +262,6 @@ export default {
             const config = {
                 headers: {
                     'Content-Type':'multipart/form-data',
-                    'Accept':'application/json',
-                    'Authorization': this.token
-
                 }
             };
 
@@ -285,11 +269,14 @@ export default {
 
             axios.post(url, formData, config)
                  .then(response => {
-                     console.log('Atualizado', response)
+                     this.transacao.status = 'sucesso';
+                     this.transacao.mensagem = response.data.message;
+                     editarImagem.value = null;
                      this.carregarLista();
                  })
-                .catch(error => {
-                    console.error('Erro ao atualizar', error.response)
+                .catch(errors => {
+                    this.transacao.status = 'erro';
+                    this.transacao.dados = errors.response.data.errors;
                  });
 
         },
@@ -303,14 +290,8 @@ export default {
             if (!confirmacao) return;
 
             const url = `${this.urlBase}/${this.item.id}`;
-            const config = {
-                headers: {
-                    'Accept': 'application/json',
-                    'Authorization': this.token
-                }
-            };
 
-            axios.delete(url, config)
+            axios.delete(url)
                 .then(response => {
                     this.transacao.status = 'sucesso';
                     this.transacao.mensagem = response.data.message;
@@ -343,21 +324,10 @@ export default {
                 this.carregarLista();
             }
         },
-        formatDate(date) {
-            if (!date) return 'Data não disponível';
-            const options = { year: 'numeric', month: 'long', day: 'numeric' };
-            return new Date(date).toLocaleDateString('pt-BR', options);
-        },
         carregarLista() {
             const url = `${this.urlBase}?${this.urlPaginacao}${this.urlFiltro}`;
-            const config = {
-                headers: {
-                    'Accept':'application/json',
-                    'Authorization': this.token
-                }
-            };
 
-            axios.get(url, config)
+            axios.get(url)
                 .then(response => {
                     this.marcas = response.data;
                 })

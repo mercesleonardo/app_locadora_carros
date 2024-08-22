@@ -63,10 +63,10 @@ class MarcaController extends Controller
     {
         try {
             $marca = $this->marcaServices->update($request, $marca);
-            return response()->json($marca);
+            return response()->json([$marca, "message" => "Marca Editada com sucesso"], 200);
         } catch (Exception $e) {
-            Log::error('Erro ao atualizar marca: ' . $e->getMessage());
-            return response()->json(['error' => 'Erro ao atualizar marca'], 500);
+            Log::error('Erro ao editar marca: ' . $e->getMessage());
+            return response()->json(['error' => 'Erro ao editar marca'], 500);
         }
     }
 

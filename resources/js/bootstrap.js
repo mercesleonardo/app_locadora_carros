@@ -32,3 +32,49 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 //     forceTLS: (import.meta.env.VITE_PUSHER_SCHEME ?? 'https') === 'https',
 //     enabledTransports: ['ws', 'wss'],
 // });
+
+/** Interceptar os requests da aplicação */
+
+axios.interceptors.request.use(
+    (config) => {
+        // Adicionando o token de autenticação ao cabeçalho da requisição
+        let token = document.cookie.split(';').find(indice => indice.trim().startsWith('token='));
+
+        if (!token) {
+            console.error('Token não encontrado');
+            return Promise.reject(new Error('Token não encontrado'));
+        }
+
+        config.headers.Authorization = 'Bearer ' + token.split('=')[1].trim();
+
+        // Adicionando o tipo de conteúdo ao cabeçalho da requisição
+        config.headers.Accept = 'application/json'
+
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
+    }
+);
+
+
+/** Interceptar os responses da aplicação */
+
+axios.interceptors.response.use(
+    (response) => {
+        return response;
+    },
+    (error) => {
+        if (error.response.status === 401 && error.response.data.message === 'Token has expired') {
+            axios.post('http://localhost:80/api/refresh')
+                .then(response => {
+                    document.cookie = 'token='+response.data.token+';SameSite=Lax'
+                    window.location.reload()
+                })
+                .catch(refreshError => {
+                    console.error('Erro ao atualizar o token:', refreshError);
+                });
+        }
+        return Promise.reject(error);
+    }
+);

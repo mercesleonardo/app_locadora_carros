@@ -22,7 +22,7 @@ class MarcaUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nome' => 'sometimes|string|max:255|unique:marcas,nome,' . $this->route('marca')->id,
+            'nome' => 'required|string|max:255|unique:marcas,nome,' . $this->route('marca')->id,
             'imagem' => 'sometimes|file|image|mimes:jpeg,png,jpg,gif,svg|max:2048'
         ];
     }
@@ -31,6 +31,7 @@ class MarcaUpdateRequest extends FormRequest
     {
         return [
             'nome.string' => 'O nome não pode ser vazio.',
+            'nome.required' => 'O nome é obrigatório.',
             'nome.unique' => 'Este nome já está em uso.',
             'imagem.image' => 'O arquivo deve ser uma imagem.',
             'imagem.mimes' => 'A imagem deve ser dos tipos: jpeg, png, jpg, gif, svg.',
