@@ -37,23 +37,21 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
 axios.interceptors.request.use(
     (config) => {
-        // Adicionando o token de autenticação ao cabeçalho da requisição
-        // const token = document.cookie.split(';').find(indice => indice.trim().startsWith('token='));
-        const token = document.cookie.split('; ').find(row => row.startsWith('token='));
-
-        if (!token) {
-            console.error('Token não encontrado');
-            return Promise.reject(new Error('Token não encontrado'));
-        }
-
-        const tokenValue = token.split('=')[1];
-        config.headers.Authorization = `Bearer ${tokenValue}`;
-
         config.headers.Accept = 'application/json';
+
+        let token = document.cookie.split(';').find(indice => {
+            return indice.includes('token=');
+        });
+
+        if (token) {
+            token = token.split('=')[1];
+            config.headers.Authorization = 'Bearer ' + token;
+        }
 
         return config;
     },
     (error) => {
+        console.log('Erro na requisição: ', error);
         return Promise.reject(error);
     }
 );
@@ -67,15 +65,17 @@ axios.interceptors.response.use(
     },
     (error) => {
         if (error.response.status === 401 && error.response.data.message === 'Token has expired') {
-            axios.post('http://laravel.test/api/refresh')
+            return axios.post('http://laravel.test/api/refresh')
                 .then(response => {
-                    // document.cookie = 'token='+response.data.token+';SameSite=Lax'
-                    document.cookie = `token=${response.data.token}; SameSite=Lax; Secure; path=/`;
-                    window.location.reload()
+                    console.log('Refresh com sucesso: ', response);
+
+                    document.cookie = 'token=' + response.data.token + ';SameSite=Lax';
+
+                    window.location.reload();
                 })
-                .catch(refreshError => {
-                    console.error('Erro ao atualizar o token:', refreshError);
-                    return Promise.reject(refreshError);
+                .catch(error => {
+                    console.log('Erro ao fazer o refresh do token: ', error);
+                    return Promise.reject(error);
                 });
         }
         return Promise.reject(error);

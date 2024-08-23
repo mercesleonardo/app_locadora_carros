@@ -67,7 +67,7 @@
         },
         methods: {
             login(event) {
-                let url = 'http://localhost:80/api/login'
+                let url = 'http://laravel.test/api/login'
                 let configuracao = {
                     method: 'post',
                     body: new URLSearchParams({
@@ -82,9 +82,9 @@
                         if(data.token) {
                             document.cookie = 'token='+data.token+';SameSite=Lax'
                         }
-                        event.target.submit()
-                    })
 
+                    })
+                event.target.submit()
             }
         }
     }

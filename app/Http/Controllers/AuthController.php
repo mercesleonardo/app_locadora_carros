@@ -19,7 +19,7 @@ class AuthController extends Controller
         return response()->json([
             'token' => $token,
             'token_type' => 'Bearer',
-            'expires_in' => auth('api')->factory()->getTTL() * 60 // Tempo de expiração em segundos
+            'expires_in' => auth('api')->factory()->getTTL() * 60
         ]);
 
     }
@@ -31,7 +31,7 @@ class AuthController extends Controller
 
     public function refresh()
     {
-        return response()->json(['access_token' => auth('api')->refresh()], 200);
+        return response()->json(['token' => auth('api')->refresh()], 200);
     }
 
     public function logout()
