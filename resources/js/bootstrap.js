@@ -71,11 +71,15 @@ axios.interceptors.response.use(
 
                     document.cookie = 'token=' + response.data.token + ';SameSite=Lax';
 
-                    window.location.reload();
+                    axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+
+                    error.config.headers['Authorization'] = `Bearer ${response.data.token}`;
+                    return axios(error.config);
+
                 })
-                .catch(error => {
-                    console.log('Erro ao fazer o refresh do token: ', error);
-                    return Promise.reject(error);
+                .catch(refreshError => {
+                    console.error('Erro ao atualizar o token:', refreshError);
+                    return Promise.reject(refreshError);
                 });
         }
         return Promise.reject(error);
